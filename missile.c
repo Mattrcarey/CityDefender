@@ -74,7 +74,7 @@ void* runMissile(void* missile){
 		mvprintw(m->row,m->col,"|");
 		refresh();
 		pthread_mutex_unlock(&mutex);
-		usleep(300000);
+		usleep(100000);
 		//usleep(10000);
 	}
 	if(collition(m)=='#'){
@@ -96,7 +96,7 @@ void* runMissile(void* missile){
 		pthread_mutex_unlock(&mutex);
 	}
 	//do collision stuff;
-
+	destroyMissile(m);
 	pthread_exit(0);
 
 }

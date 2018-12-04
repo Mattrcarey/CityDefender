@@ -55,14 +55,16 @@ void buildMap(City* city,int x, int y,char** display){
 		display[y-city->map[i]][i]='_';
 		refresh();
 		if(i>0&&city->map[i]>city->map[i-1]){
-			for(int j=city->map[i-1];j<(city->map[i]);j++){
-				mvprintw(y-j,i-1,"|");
-				display[y-j][i-1]='|';
+			mvprintw(y-(city->map[i]),i," ");
+			display[y-(city->map[i])][i]='e';
+			for(int j=2;j<(city->map[i]);j++){
+				mvprintw(y-j,i,"|");
+				display[y-j][i]='|';
 				refresh();
 			}
 		}
 		if(i>0&&city->map[i]<city->map[i-1]){
-			for(int j=city->map[i];j<(city->map[i-1]);j++){
+			for(int j=2;j<(city->map[i-1]);j++){
 				mvprintw(y-j,i,"|");
 				display[y-j][i]='|';
 				refresh();
@@ -70,7 +72,13 @@ void buildMap(City* city,int x, int y,char** display){
 		}
 		i++;
 	}
-	refresh();
+	while(i!=x){
+		mvprintw(y-2,i,"_");
+		display[y-2][i] = '_';
+		refresh();
+		i++;
+	}
+	//refresh();
 }
 
 
@@ -169,21 +177,21 @@ int main(int argc, char* argv[]){
 	}
 	int round=0;
 	while(missilecount(round,city)){
-		pthread_create(&missilethread1,NULL,runMissile,missile1);
-		sleep(3);
-		pthread_create(&missilethread2,NULL,runMissile,missile2);
-		sleep(3);
-		pthread_create(&missilethread3,NULL,runMissile,missile3);		
-		sleep(3);
-		pthread_join(missilethread1,NULL);
-                pthread_join(missilethread2,NULL);
-                pthread_join(missilethread3,NULL);
-		destroyMissile(missile1);
-		destroyMissile(missile2);
-		destroyMissile(missile3);
-		missile1 = makeMissile();
-		missile2 = makeMissile();
-		missile3 = makeMissile();
+		pthread_create(&missilethread1,NULL,runMissile,makeMissile());
+		sleep(2);
+		//pthread_create(&missilethread2,NULL,runMissile,missile2);
+		//sleep(3);
+		//pthread_create(&missilethread3,NULL,runMissile,missile3);		
+		//sleep(3);
+		//pthread_join(missilethread1,NULL);
+                //pthread_join(missilethread2,NULL);
+                //pthread_join(missilethread3,NULL);
+		//destroyMissile(missile1);
+		//destroyMissile(missile2);
+		//destroyMissile(missile3);
+		//missile1 = makeMissile();
+		//missile2 = makeMissile();
+		//missile3 = makeMissile();
 		round++;
 	}
 	for (int c = 1; c <= 100000; c++){
