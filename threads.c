@@ -10,6 +10,7 @@
 #include"missile.h"
 #include"defence.h"
 
+
 typedef struct City{
 	char* defence;
 	char* attack;
@@ -55,21 +56,17 @@ void buildMap(City* city,int x, int y){
 			break;
 		}
 		mvprintw(y-(city->map[i]),i,"_");
-		//display[y-city->map[i]][i]='_';
 		refresh();
 		if(i>0&&city->map[i]>city->map[i-1]){
 			mvprintw(y-(city->map[i]),i," ");
-			//display[y-(city->map[i])][i]='e';
 			for(int j=2;j<(city->map[i]);j++){
 				mvprintw(y-j,i,"|");
-				//display[y-j][i]='|';
 				refresh();
 			}
 		}
 		if(i>0&&city->map[i]<city->map[i-1]){
 			for(int j=2;j<(city->map[i-1]);j++){
 				mvprintw(y-j,i,"|");
-				//display[y-j][i]='|';
 				refresh();
 			}
 		}
@@ -77,11 +74,9 @@ void buildMap(City* city,int x, int y){
 	}
 	while(i!=x){
 		mvprintw(y-2,i,"_");
-		//display[y-2][i] = '_';
 		refresh();
 		i++;
 	}
-	//refresh();
 }
 
 
@@ -98,17 +93,19 @@ City* readFile(FILE* fp){
 		buf[strlen(buf)-1]='\0';
 		if(buf[0]!='#'){
 			if(city->defence==NULL){
-				//city->defence=malloc(strlen(buf));
-				//strcpy(city->defence,buf);
 				city->defence = strdup(buf);
 			}
 			else if(city->attack==NULL){
-				//city->attack=malloc(strlen(buf));
-				//strcpy(city->attack,buf);
 				city->attack = strdup(buf);
 			}
 			else if(city->missiles == -1){
-				city->missiles = atoi(buf);
+				if(atoi(buf)){
+					city->missiles = atoi(buf);
+				}
+				else{
+					fprintf(stderr,"invalid file\n");
+					exit(0);
+				}
 			}
 			else if(buf[0]>47&&buf[0]<58){
 				char* token = strtok(buf," ");
@@ -118,10 +115,18 @@ City* readFile(FILE* fp){
 						city->map[city->size]=num;
 						city->size = city->size+1;
 					}
+					else{
+						fprintf(stderr,"invalid file2\n");
+						exit(0);
+					}
 					token = strtok(NULL," ");
 				}
 			}
 		}
+	}
+	if((city->defence==NULL)||(city->attack==NULL)||(city->missiles == -1)||(city->size == 0)){
+		fprintf(stderr,"invalid file3\n");
+		exit(0);
 	}
 	return city;
 }
@@ -150,13 +155,6 @@ int main(int argc, char* argv[]){
 	noecho();
 	int width = getmaxx(stdscr);
 	int height = getmaxy(stdscr);
-	//char** display= malloc(height-1);
-	//for(int i = 0; i<height;i++){
-	//	display[i] = malloc(width-1);
-	//	for(int y=0; y<width;y++){
-	//		display[i][y]='e';
-	//	}	
-	//}
 	pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 	init_missiles(width,height,mutex);
 	init_defence(width,height,mutex);
@@ -168,7 +166,6 @@ int main(int argc, char* argv[]){
 	Defence* defence = make_defence(height-(tallesttower(city,width)+1),width/2);
 	pthread_t defenceThread;
 	pthread_create(&defenceThread,NULL,run,defence);
-	//pthread_detach(defenceThread);
 
 	//starting the missile threads test;
 	pthread_t missilethread;
@@ -176,11 +173,10 @@ int main(int argc, char* argv[]){
 	while(missilecount(round,city)){
 		pthread_create(&missilethread,NULL,runMissile,makeMissile());
 		pthread_detach(missilethread);
-		sleep(3);
-		//pthread_join(missilethread,NULL);
+		sleep((rand()%5)+2);
 		round++;
 	}
-	sleep(3);
+	sleep(7);
 	pthread_mutex_lock(&mutex);
 	mvprintw(3,(width/2)-24,"The ");
 	mvprintw(3,(width/2)-20,city->attack);
@@ -207,7 +203,6 @@ int main(int argc, char* argv[]){
 	free(city->attack);
 	free(city);
 	endwin();
-	
 	return 1;
 
 }
