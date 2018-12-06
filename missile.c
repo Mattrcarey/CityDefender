@@ -44,13 +44,6 @@ void destroyMissile(Missile* missile){
 int collition(Missile* missile){
 	pthread_mutex_lock(&mutex);
 	char ch;
-	//if(display[missile->row+1][missile->col]){
-	//	ch=display[missile->row+1][missile->col];
-	//	if((ch=='_') || (ch =='|') || (ch== '#')){
-	//		pthread_mutex_unlock(&mutex);
-	//		return ch;
-	//	}
-	//}
 	ch = mvinch(missile->row+1,missile->col);
 	if((ch=='_') || (ch == '|') || (ch == '#') || (ch=='*')){
 		pthread_mutex_unlock(&mutex);
@@ -89,7 +82,7 @@ void* runMissile(void* missile){
 		//usleep(10000);
 	}
 	if(m->row+2!=maxY){
-		if(collition(m)=='#'){
+		if((collition(m)=='#')||(collition(m)=='|')){
 			pthread_mutex_lock(&mutex);
 			mvprintw(m->row,m->col,"?");
 			mvprintw(m->row+1,m->col,"*");

@@ -49,11 +49,10 @@ void gameOff(){
 void *run(void* d){
 	//wait for user input and move
 	Defence* defence = d;
+	pthread_mutex_lock(&mutex);
 	mvprintw(defence->row,defence->col,defence->graphic);
-	for(int i=0;i<5;i++){
-		//display[defence->row][defence->col+i]='#';
-	}
 	refresh();
+	pthread_mutex_unlock(&mutex);
 	int c = 0;
 	while(1){
 		c=0;

@@ -99,33 +99,45 @@ City* readFile(FILE* fp){
 				city->attack = strdup(buf);
 			}
 			else if(city->missiles == -1){
-				if(atoi(buf)){
+				//if(!isdigit(atoi(buf))){
 					city->missiles = atoi(buf);
-				}
-				else{
-					fprintf(stderr,"invalid file\n");
-					exit(0);
-				}
+				//}
+				//else{
+				//	fprintf(stderr,"Error: invalid missile number.\n");
+				//	exit(0);
+				//}
 			}
 			else if(buf[0]>47&&buf[0]<58){
 				char* token = strtok(buf," ");
 				while(token!=NULL){
-					if(atoi(token)){
-						num = atoi(token);
-						city->map[city->size]=num;
-						city->size = city->size+1;
-					}
-					else{
-						fprintf(stderr,"invalid file2\n");
-						exit(0);
-					}
+					//if(atoi(token)){
+					num = atoi(token);
+					city->map[city->size]=num;
+					city->size = city->size+1;
+					//}
+					//else{
+					//	fprintf(stderr,"Error: invalid grid value.\n");
+					//	exit(0);
+					//}
 					token = strtok(NULL," ");
 				}
 			}
 		}
 	}
-	if((city->defence==NULL)||(city->attack==NULL)||(city->missiles == -1)||(city->size == 0)){
-		fprintf(stderr,"invalid file3\n");
+	if(city->defence==NULL){
+		fprintf(stderr,"Error: missing defender name.\n");
+		exit(0);
+	}
+	if(city->attack==NULL){
+		fprintf(stderr,"Error: missing attacker name.\n");
+		exit(0);
+	}
+	if(city->missiles == -1){
+		fprintf(stderr,"Error: missing missile number.\n");
+		exit(0);
+	}
+	if(city->size == 0){
+		fprintf(stderr,"Error: missing grid.\n");
 		exit(0);
 	}
 	return city;
