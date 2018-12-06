@@ -1,7 +1,7 @@
 Theresa May
 Jeremy Corbin
 # max missiles >= 0
-1000
+10
 # cityscape: the next comment line is for human reader convenience
 # 1 2 3 4 5 6 7 8 9 # each row is 10 characters of buildings/ground
 2 2 2 2 2 2 2 2 2 2

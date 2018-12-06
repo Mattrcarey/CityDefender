@@ -10,16 +10,16 @@
 
 static int maxX;
 static int maxY;
-static int gameOn = 1;
-char** display;
+int gameOn = 1;
+//char** display;
 pthread_mutex_t mutex;// = PTHREAD_MUTEX_INITIALIZER;
 
 
 
-void init_defence(int x, int y, char** d, pthread_mutex_t m){
+void init_defence(int x, int y, pthread_mutex_t m){
 	maxX = x;
 	maxY = y;
-	display = d;
+	//display = d;
 	mutex = m;
 }
 
@@ -28,8 +28,9 @@ Defence* make_defence(int r, int c){
 	Defence *defence = malloc(sizeof(Defence));
 	defence->row = r;
 	defence->col = c;
-	defence->graphic = malloc(5);
-	strcpy(defence->graphic,"#####");
+	//defence->graphic = malloc(5);
+	//strcpy(defence->graphic,"#####");
+	defence->graphic = strdup("#####");
 	return defence;
 }
 
@@ -50,19 +51,19 @@ void *run(void* d){
 	Defence* defence = d;
 	mvprintw(defence->row,defence->col,defence->graphic);
 	for(int i=0;i<5;i++){
-		display[defence->row][defence->col+i]='#';
+		//display[defence->row][defence->col+i]='#';
 	}
 	refresh();
 	int c = 0;
-	while(gameOn){
+	while(1){
 		c=0;
-		switch((c=getch())){
+		switch((c=getchar())){
 			case 67:
 				//move right
 				if(defence->col<maxX-5){
 					pthread_mutex_lock(&mutex);
-					display[defence->row][defence->col] = ' ';
-					display[defence->row][defence->col+5] = '#';
+					//display[defence->row][defence->col] = ' ';
+					//display[defence->row][defence->col+5] = '#';
 					defence->col=defence->col+1;
 					move(defence->row,0);
 					clrtoeol();
@@ -75,8 +76,8 @@ void *run(void* d){
 				//move left
 				if(defence->col!=0){
 					pthread_mutex_lock(&mutex);
-					display[defence->row][defence->col+4] = ' ';
-					display[defence->row][defence->col-1] = '#';
+					//display[defence->row][defence->col+4] = ' ';
+					//display[defence->row][defence->col-1] = '#';
 					move(defence->row,0);
 					clrtoeol();
 					defence->col=defence->col-1;
@@ -85,6 +86,11 @@ void *run(void* d){
 					pthread_mutex_unlock(&mutex);
 				}
 				break;
+			case 'q':
+				if(!gameOn){
+					pthread_exit(0);
+					break;
+				}
 			default:
 				break;
 		}			

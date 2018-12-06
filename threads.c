@@ -1,3 +1,4 @@
+#define _DEFAULT_SOURCE
 #include<string.h>
 #include<pthread.h>
 #include<stdio.h>
@@ -45,28 +46,30 @@ int tallesttower(City* city,int width){
 }
 
 
-void buildMap(City* city,int x, int y,char** display){
+void buildMap(City* city,int x, int y){
 	int i = 0;
+	mvprintw(0,(x/2)-24,"Enter 'q' to quit at end of attack, or control-C");
+	refresh();
 	while(i!=x){
 		if(i==city->size){
 			break;
 		}
 		mvprintw(y-(city->map[i]),i,"_");
-		display[y-city->map[i]][i]='_';
+		//display[y-city->map[i]][i]='_';
 		refresh();
 		if(i>0&&city->map[i]>city->map[i-1]){
 			mvprintw(y-(city->map[i]),i," ");
-			display[y-(city->map[i])][i]='e';
+			//display[y-(city->map[i])][i]='e';
 			for(int j=2;j<(city->map[i]);j++){
 				mvprintw(y-j,i,"|");
-				display[y-j][i]='|';
+				//display[y-j][i]='|';
 				refresh();
 			}
 		}
 		if(i>0&&city->map[i]<city->map[i-1]){
 			for(int j=2;j<(city->map[i-1]);j++){
 				mvprintw(y-j,i,"|");
-				display[y-j][i]='|';
+				//display[y-j][i]='|';
 				refresh();
 			}
 		}
@@ -74,7 +77,7 @@ void buildMap(City* city,int x, int y,char** display){
 	}
 	while(i!=x){
 		mvprintw(y-2,i,"_");
-		display[y-2][i] = '_';
+		//display[y-2][i] = '_';
 		refresh();
 		i++;
 	}
@@ -87,18 +90,22 @@ City* readFile(FILE* fp){
 	City* city = malloc(sizeof(City));
 	char buf[256];
 	city->missiles = -1;
+	city->defence = NULL;
+	city->attack = NULL;
 	city->size = 0;
 	int num;
 	while(fgets(buf,sizeof(buf),fp)!=NULL){
 		buf[strlen(buf)-1]='\0';
 		if(buf[0]!='#'){
 			if(city->defence==NULL){
-				city->defence=malloc(strlen(buf));
-				strcpy(city->defence,buf);
+				//city->defence=malloc(strlen(buf));
+				//strcpy(city->defence,buf);
+				city->defence = strdup(buf);
 			}
 			else if(city->attack==NULL){
-				city->attack=malloc(strlen(buf));
-				strcpy(city->attack,buf);
+				//city->attack=malloc(strlen(buf));
+				//strcpy(city->attack,buf);
+				city->attack = strdup(buf);
 			}
 			else if(city->missiles == -1){
 				city->missiles = atoi(buf);
@@ -143,62 +150,64 @@ int main(int argc, char* argv[]){
 	noecho();
 	int width = getmaxx(stdscr);
 	int height = getmaxy(stdscr);
-	char** display= malloc(height+1);
-	for(int i = 0; i<height;i++){
-		display[i] = malloc(width);
-		for(int y=0; y<width;y++){
-			display[i][y]='e';
-		}	
-	}
+	//char** display= malloc(height-1);
+	//for(int i = 0; i<height;i++){
+	//	display[i] = malloc(width-1);
+	//	for(int y=0; y<width;y++){
+	//		display[i][y]='e';
+	//	}	
+	//}
 	pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-	init_missiles(width,height,display,mutex);
-	init_defence(width,height,display,mutex);
-	buildMap(city,width,height,display);
+	init_missiles(width,height,mutex);
+	init_defence(width,height,mutex);
+	buildMap(city,width,height);
 	
 	
 	//starting the defence thread
+	//int test = tallesttower;
 	Defence* defence = make_defence(height-(tallesttower(city,width)+1),width/2);
 	pthread_t defenceThread;
 	pthread_create(&defenceThread,NULL,run,defence);
-	
+	//pthread_detach(defenceThread);
 
 	//starting the missile threads test;
-	pthread_t missilethread1;
-	pthread_t missilethread2;
-	pthread_t missilethread3;
-	pthread_t missilethread4;
-	Missile* missile1 = makeMissile();
-	Missile* missile2 = makeMissile();
-	Missile* missile3 = makeMissile();
-	Missile* missile4 = makeMissile();
-	for (int c =1; c<= 10000; c++){
-		for (int d = 1; d<=10000; d++){
-		}
-	}
+	pthread_t missilethread;
 	int round=0;
 	while(missilecount(round,city)){
-		pthread_create(&missilethread1,NULL,runMissile,makeMissile());
-		sleep(2);
-		//pthread_create(&missilethread2,NULL,runMissile,missile2);
-		//sleep(3);
-		//pthread_create(&missilethread3,NULL,runMissile,missile3);		
-		//sleep(3);
-		//pthread_join(missilethread1,NULL);
-                //pthread_join(missilethread2,NULL);
-                //pthread_join(missilethread3,NULL);
-		//destroyMissile(missile1);
-		//destroyMissile(missile2);
-		//destroyMissile(missile3);
-		//missile1 = makeMissile();
-		//missile2 = makeMissile();
-		//missile3 = makeMissile();
+		pthread_create(&missilethread,NULL,runMissile,makeMissile());
+		pthread_detach(missilethread);
+		sleep(3);
+		//pthread_join(missilethread,NULL);
 		round++;
 	}
-	for (int c = 1; c <= 100000; c++){
-		for (int d = 1; d <= 100000; d++){
+	sleep(3);
+	pthread_mutex_lock(&mutex);
+	mvprintw(3,(width/2)-24,"The ");
+	mvprintw(3,(width/2)-20,city->attack);
+	mvprintw(3,(width/2)-(20)+strlen(city->attack)," attack has ended");
+	pthread_mutex_unlock(&mutex);
+	int c= getchar();
+	gameOff();
+	pthread_join(defenceThread,NULL);
+	pthread_mutex_lock(&mutex);
+	mvprintw(5,(width/2)-24,"The ");
+        mvprintw(5,(width/2)-20,city->defence);
+        mvprintw(5,(width/2)-(20)+strlen(city->defence)," defence has ended");
+	mvprintw(6,(width/2)-24,"hit enter to close...");
+	c=getch();
+	pthread_mutex_unlock(&mutex);
+	while(1){
+		if(c == 13){
+			break;
 		}
+		c=getchar();
 	}
+	destroy_defence(defence);
+	free(city->defence);
+	free(city->attack);
+	free(city);
 	endwin();
+	
 	return 1;
 
 }

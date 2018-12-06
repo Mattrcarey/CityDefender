@@ -5,9 +5,10 @@
 typedef struct Missile{
 	int col;
 	int row;
+	int speed;
 }Missile;
 
-void init_missiles(int x, int y,char** display,pthread_mutex_t m);
+void init_missiles(int x, int y,pthread_mutex_t m);
 
 Missile* makeMissile();
 

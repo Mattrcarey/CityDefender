@@ -9,11 +9,13 @@ typedef struct Defence{
 }Defence;
 
 
-void init_defence(int x,int y, char** display,pthread_mutex_t m);
+void init_defence(int x,int y,pthread_mutex_t m);
 
 Defence* make_defence(int r, int c);
 
 void destroy_defence(Defence* defence);
+
+void gameOff();
 
 void* run(void * defence);
 
