@@ -10,29 +10,24 @@
 #include"missile.h"
 #include"defence.h"
 
+//@author Matthew Carey
 
+//this struct is used to store all the data from the 
+//file
 typedef struct City{
 	char* defence;
 	char* attack;
 	int missiles;
-	int map[1000];
+	int map[300];
 	int size;
 }City;
 
 
-int missilecount(int current,City* city){
-	if(city->missiles==0){
-		return 1;
-	}
-	else if(current<city->missiles){
-		return 1;
-	}
-	else{
-		return 0;
-	}
-}
-
-
+///this function is used to return the height of the tallest tower 
+///on the window
+///@param city: the city struct contains the array of building heights
+///@param width: is the width of the window
+///@returns the max height
 int tallesttower(City* city,int width){
 	int max = 0;
 	for(int i = 0; i<city->size;i++){
@@ -47,6 +42,10 @@ int tallesttower(City* city,int width){
 }
 
 
+///this functions builds the city in the curses window
+///@param city: city contains the array of building heights
+///@param x: the width of the window
+///@param y: the height of the window
 void buildMap(City* city,int x, int y){
 	int i = 0;
 	mvprintw(0,(x/2)-24,"Enter 'q' to quit at end of attack, or control-C");
@@ -80,7 +79,9 @@ void buildMap(City* city,int x, int y){
 }
 
 
-
+///this function reads the file and builds a city struct
+///@param fp: this is the file we read from
+///@returns a city struct if no errors are encountered
 City* readFile(FILE* fp){
 	City* city = malloc(sizeof(City));
 	char buf[256];
@@ -99,26 +100,18 @@ City* readFile(FILE* fp){
 				city->attack = strdup(buf);
 			}
 			else if(city->missiles == -1){
-				//if(!isdigit(atoi(buf))){
-					city->missiles = atoi(buf);
-				//}
-				//else{
-				//	fprintf(stderr,"Error: invalid missile number.\n");
-				//	exit(0);
-				//}
+				if(atoi(buf)<0){
+					fprintf(stderr,"Error: negative missiles\n");
+					exit(0);
+				}
+				city->missiles = atoi(buf);
 			}
 			else if(buf[0]>47&&buf[0]<58){
 				char* token = strtok(buf," ");
 				while(token!=NULL){
-					//if(atoi(token)){
 					num = atoi(token);
 					city->map[city->size]=num;
 					city->size = city->size+1;
-					//}
-					//else{
-					//	fprintf(stderr,"Error: invalid grid value.\n");
-					//	exit(0);
-					//}
 					token = strtok(NULL," ");
 				}
 			}
@@ -126,10 +119,13 @@ City* readFile(FILE* fp){
 	}
 	if(city->defence==NULL){
 		fprintf(stderr,"Error: missing defender name.\n");
+		free(city);
 		exit(0);
 	}
 	if(city->attack==NULL){
 		fprintf(stderr,"Error: missing attacker name.\n");
+		free(city->defence);
+		free(city);
 		exit(0);
 	}
 	if(city->missiles == -1){
@@ -144,10 +140,9 @@ City* readFile(FILE* fp){
 }
 
 
+///calls function to read the file, initialised the curses window and starts 
+//the threads that run the game
 int main(int argc, char* argv[]){
-	//check that it has the right number of args
-	//check that the arg works are a file
-	//run helper fuction to read the file
 	FILE *fp;
 	City* city;
 	if(argc<2){
@@ -172,40 +167,51 @@ int main(int argc, char* argv[]){
 	init_defence(width,height,mutex);
 	buildMap(city,width,height);
 	
-	
 	//starting the defence thread
-	//int test = tallesttower;
-	Defence* defence = make_defence(height-(tallesttower(city,width)+1),width/2);
+	Defence* defence = make_defence(height-(tallesttower(city,width)+2),width/2);
 	pthread_t defenceThread;
 	pthread_create(&defenceThread,NULL,run,defence);
 
-	//starting the missile threads test;
+	//starting the missile threads
 	pthread_t missilethread;
 	int round=0;
-	while(missilecount(round,city)){
-		pthread_create(&missilethread,NULL,runMissile,makeMissile());
-		pthread_detach(missilethread);
-		sleep((rand()%5)+2);
-		round++;
+	if(city->missiles==0){//if we have infinite missiles
+		while(1){
+			pthread_create(&missilethread,NULL,runMissile,makeMissile());
+			pthread_detach(missilethread);
+			sleep((rand()%4)+1);
+		}
 	}
-	sleep(7);
+	else{
+		pthread_t threadlist[city->missiles];
+		for(int i = 0; i<city->missiles; i++){
+			pthread_create(&threadlist[i],NULL,runMissile,makeMissile());
+		       	sleep((rand()%4)+1);		
+		}
+		for(int i = 0; i<city->missiles; i++){
+			pthread_join(threadlist[i],NULL);
+		}
+	}
+
+	//the attack is over at this point
 	pthread_mutex_lock(&mutex);
 	mvprintw(3,(width/2)-24,"The ");
 	mvprintw(3,(width/2)-20,city->attack);
 	mvprintw(3,(width/2)-(20)+strlen(city->attack)," attack has ended");
+	refresh();
 	pthread_mutex_unlock(&mutex);
-	int c= getchar();
 	gameOff();
-	pthread_join(defenceThread,NULL);
-	pthread_mutex_lock(&mutex);
+	pthread_join(defenceThread,NULL);//once the defence thread joins
+	pthread_mutex_lock(&mutex);	 //the the defence had surrendered
 	mvprintw(5,(width/2)-24,"The ");
         mvprintw(5,(width/2)-20,city->defence);
         mvprintw(5,(width/2)-(20)+strlen(city->defence)," defence has ended");
 	mvprintw(6,(width/2)-24,"hit enter to close...");
-	c=getch();
+	refresh();
 	pthread_mutex_unlock(&mutex);
+	int c = getchar();
 	while(1){
-		if(c == 13){
+		if(c == 13){//game ends on enter
 			break;
 		}
 		c=getchar();
@@ -216,5 +222,4 @@ int main(int argc, char* argv[]){
 	free(city);
 	endwin();
 	return 1;
-
 }
