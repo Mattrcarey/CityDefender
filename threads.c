@@ -174,7 +174,6 @@ int main(int argc, char* argv[]){
 
 	//starting the missile threads
 	pthread_t missilethread;
-	int round=0;
 	if(city->missiles==0){//if we have infinite missiles
 		while(1){
 			pthread_create(&missilethread,NULL,runMissile,makeMissile());
